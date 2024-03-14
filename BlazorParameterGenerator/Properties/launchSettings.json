@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DebugSG": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\BlazorDemo\\BlazorDemo.Client\\BlazorDemo.Client.csproj"
+    }
+  }
+}
