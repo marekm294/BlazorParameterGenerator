@@ -45,18 +45,29 @@ internal sealed class SetParametersSourceGenerator : ISourceGenerator
         var properties = classDeclaration
             .Members
             .OfType<PropertyDeclarationSyntax>()
-            .Where(p => p.HasPublicAccessModifier() && p.HasParameterAttribute())
-            .Select(p => new CustomPropertyInfo()
+            .Where(p => p.HasPublicAccessModifier() && p.HasParameterAttribute());
+
+        var propertyInformation = properties
+            .Select(p => new CustomPropertyInformation()
             {
                 PropertyType = p.Type.ToString(),
                 PropertyName = p.Identifier.Text,
             })
             .ToList();
 
+        var captureUnmatchedValuesPropertyInformation = properties
+            .Where(p => p.HasCaptureUnmatchedValuesParameterAttribute(true))
+            .Select(p => new CustomPropertyInformation()
+            {
+                PropertyType = p.Type.ToString(),
+                PropertyName = p.Identifier.Text,
+            })
+            .FirstOrDefault();
+
         sourceCodeBuilder
             .AddNamespace(namespaceValue)
             .AddClass(classDeclaration.Modifiers.Select(m => m.Text), classDeclaration.Identifier.Text)
-            .AddMethodContent(properties);
+            .AddMethodContent(propertyInformation, captureUnmatchedValuesPropertyInformation);
 
         return sourceCodeBuilder.ToString();
     }

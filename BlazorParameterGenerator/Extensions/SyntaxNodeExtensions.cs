@@ -1,12 +1,15 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis;
-using System.Linq;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
 
 namespace BlazorParameterGenerator.Extensions;
 
 internal static class SyntaxNodeExtensions
 {
+    private const string PARAMETER_ATTRIBUTE_NAME = "Parameter";
+    private const string PARAMETER_ATTRIBUTE_FULL_NAME = $"{PARAMETER_ATTRIBUTE_NAME}Attribute";
+
     public static bool TryGetNamespace(this SyntaxNode syntaxNode, out string namespaceValue)
     {
         if (syntaxNode.Parent is null)
@@ -48,8 +51,42 @@ internal static class SyntaxNodeExtensions
     {
         return propertyDeclarationSyntax
             .AttributeLists
+            .Any(a => a.HasParameterAttribute());
+    }
+
+    public static bool HasParameterAttribute(this AttributeListSyntax attributeListSyntax)
+    {
+        return attributeListSyntax
+            .Attributes
+            .Any(at => at.Name.ToString() == PARAMETER_ATTRIBUTE_NAME || at.Name.ToString() == PARAMETER_ATTRIBUTE_FULL_NAME);
+    }
+
+    public static bool HasCaptureUnmatchedValuesParameterAttribute(
+        this PropertyDeclarationSyntax propertyDeclarationSyntax,
+        bool hasParameterAttribute = false)
+    {
+        return propertyDeclarationSyntax
+            .AttributeLists
+            .Where(a => hasParameterAttribute || a.HasParameterAttribute())
             .Any(a => a
                 .Attributes
-                .Any(at => at.Name.ToString() == "Parameter" || at.Name.ToString() == "ParameterAttribute"));
+                .Any(at => at.HasParameter("CaptureUnmatchedValues", SyntaxKind.FalseLiteralExpression)));
+    }
+
+    public static bool HasParameter(
+        this AttributeSyntax attributeSyntax,
+        string attributeName,
+        SyntaxKind expressionSyntaxKind)
+    {
+        return attributeSyntax
+            .ArgumentList?
+            .Arguments
+            .Any(ar => ar.GetName() == attributeName && ar.Expression.IsKind(expressionSyntaxKind)) ?? false;
+    }
+
+    public static string? GetName(
+        this AttributeArgumentSyntax attributeArgumentSyntax)
+    {
+        return attributeArgumentSyntax.NameEquals?.Name.ToString();
     }
 }

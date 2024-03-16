@@ -1,5 +1,4 @@
 ﻿using BlazorParameterGenerator.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +10,8 @@ internal sealed class SourceCodeBuilder
     private string? _modifiers;
     private string? _className;
     private bool _shouldOverrideMethod;
-    private List<CustomPropertyInfo> _customPropertyInfos = [];
+    private List<CustomPropertyInformation> _customPropertyInfos = [];
+    CustomPropertyInformation? _captureUnmatchedValuesProperty;
 
     public SourceCodeBuilder AddUsings()
     {
@@ -33,10 +33,13 @@ internal sealed class SourceCodeBuilder
         return this;
     }
 
-    public SourceCodeBuilder AddMethodContent(List<CustomPropertyInfo> customPropertyInfos)
+    public SourceCodeBuilder AddMethodContent(
+        List<CustomPropertyInformation> customPropertyInfos,
+        CustomPropertyInformation? captureUnmatchedValuesProperty)
     {
         _customPropertyInfos = customPropertyInfos;
         _shouldOverrideMethod = _customPropertyInfos.Any();
+        _captureUnmatchedValuesProperty = captureUnmatchedValuesProperty;
         return this;
     }
 
@@ -77,8 +80,7 @@ namespace {_namespace}
         return $@"switch (parameter.Name)
                 {{
                     {GetCaseSourceCodes()}
-                    default:
-                        throw new ArgumentException($""Unknown parameter: {{parameter.Name}}"");
+                    {GetDefaultCaseSourceCode()}
                 }}";
     }
 
@@ -91,5 +93,18 @@ namespace {_namespace}
                     ");
 
         return string.Join("", caseStatements).TrimEnd();
+    }
+
+    private string GetDefaultCaseSourceCode()
+    {
+        if (_captureUnmatchedValuesProperty is null)
+        {
+            return $@"default:
+                        throw new ArgumentException($""Unknown parameter: {{parameter.Name}}"");";
+        }
+        return $@"default:
+                        {_captureUnmatchedValuesProperty.PropertyName} ??= new Dictionary<string, object>();
+                        {_captureUnmatchedValuesProperty.PropertyName}[parameter.Name] = parameter.Value;
+                        break;";
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/counter"
+@using BlazorDemo.Client.Components
 @rendermode InteractiveAuto
 
 <PageTitle>Counter</PageTitle>
@@ -9,6 +10,20 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+<MyComponent Prop1="S1"
+             Prop2="S2"
+             Prop3="3"
+             Prop4="S4"
+             Prop5="S5"
+             class="my-class" />
+
+
+<MyComponent Prop1="S1"
+             Prop2="S2"
+             Prop3="3"
+             Prop4="S4"
+             Prop5="S5"
+             Attributes="@(new Dictionary<string, object>(){{"class", "my-class" }})" />
 @code {
     private int currentCount = 0;
 

@@ -23,6 +23,9 @@ public partial class MyComponent
     [Parameter]
     public string Prop5 { get; set; }
 
+    [Parameter(CaptureUnmatchedValues = false)]
+    public Dictionary<string, object> Attributes { get; set; }
+
     public void Temp()
     {
 
