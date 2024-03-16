@@ -52,4 +52,3 @@ namespace BlazorDemo.Client.Components
         }
     }
 ```
-```}
